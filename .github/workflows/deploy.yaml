@@ -1,0 +1,54 @@
+name: Terraform AWS Deploy
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy Terraform
+    environment: production
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    env:
+      DESTROY: "false" # Altere para 'true' para destruir
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Format
+        run: terraform fmt -check
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan (Apply Mode)
+        if: ${{ env.DESTROY == 'false' }}
+        run: terraform plan -out=tfplan
+
+      - name: Terraform Apply
+        if: ${{ env.DESTROY == 'false' }}
+        run: terraform apply -auto-approve tfplan
+
+      - name: Terraform Destroy
+        if: ${{ env.DESTROY == 'true' }}
+        run: terraform destroy -auto-approve
