@@ -3,7 +3,7 @@ terraform {
 
   backend "s3" {
     bucket  = "own-tfstate"
-    key     = "terraform-db/proposta-db/terraform.tfstate"
+    key     = "terraform-msk/terraform.tfstate"
     region  = "ca-central-1"
     encrypt = true
   }
